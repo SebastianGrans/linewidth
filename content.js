@@ -17,6 +17,7 @@
   let centeredElement = null;
   let justified = false;
   let justifiedElement = null;
+  let enabled = true;
 
   const highlightBox = document.createElement("div");
   highlightBox.id = "linewidth-highlight";
@@ -144,6 +145,7 @@
         width: widthValue,
         centered,
         justified,
+        enabled,
       },
     });
 
@@ -210,7 +212,7 @@
 
     const stored = await browser.storage.local.get(STORAGE_KEY);
     const settings = stored[STORAGE_KEY];
-    if (!settings) return;
+    if (!settings || settings.enabled === false) return;
 
     let element = null;
     try {
@@ -265,6 +267,8 @@
       applyJustify(chain[chainIndex]);
       justifiedElement = chain[chainIndex];
     }
+
+    enabled = settings.enabled ?? true;
   }
 
   function selectElement(element, options = {}) {

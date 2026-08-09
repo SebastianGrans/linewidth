@@ -115,6 +115,19 @@ function renderPageRow(origin, site, page) {
 
   row.querySelector(".settings").textContent = describeSettings(page.settings);
 
+  const toggleSwitch = row.querySelector(".switch");
+  const toggleInput = row.querySelector(".toggle");
+  if (site.granted && site.registered) {
+    toggleSwitch.hidden = false;
+    toggleInput.checked = page.settings.enabled !== false;
+    toggleInput.addEventListener("change", async () => {
+      await browser.storage.local.set({
+        [page.key]: { ...page.settings, enabled: toggleInput.checked },
+      });
+      render();
+    });
+  }
+
   row.querySelector(".delete").addEventListener("click", async () => {
     await browser.storage.local.remove(page.key);
     render();
