@@ -146,6 +146,8 @@
     // Look up saved settings for this page and re-apply them if the
     // saved element can still be found
 
+    if (chain.length) return true;
+
     const stored = await browser.storage.local.get(STORAGE_KEY);
     const settings = stored[STORAGE_KEY];
     if (!settings) return false;
@@ -156,10 +158,30 @@
     } catch {
       element = null;
     }
-    if (!element) return false;
+    if (!element || chain.length) return false;
 
     selectElement(element, settings);
     return true;
+  }
+
+  async function silentlyRestoreOnLoad() {
+    // Reapply saved styling immediately on script load, without opening the panel
+
+    if (chain.length) return;
+
+    const stored = await browser.storage.local.get(STORAGE_KEY);
+    const settings = stored[STORAGE_KEY];
+    if (!settings) return;
+
+    let element = null;
+    try {
+      element = document.querySelector(settings.selector);
+    } catch {
+      element = null;
+    }
+    if (!element || chain.length) return;
+
+    applyStateToElement(element, settings);
   }
 
   function onMouseMove(event) {
@@ -180,50 +202,51 @@
     repickButton.disabled = disabled;
   }
 
+  function applyStateToElement(element, settings) {
+    // Set selection state and apply width/centering/justification to the
+    // given element — no panel/UI changes
+
+    chain = buildChain(element);
+    chainIndex = 0;
+
+    widthValue = settings.width ?? `${DEFAULT_WIDTH_EM}em`;
+    styledElement = null;
+    applyWidthToCurrent();
+
+    centered = settings.centered ?? true;
+    centeredElement = null;
+    if (centered) {
+      applyCenter(chain[chainIndex]);
+      centeredElement = chain[chainIndex];
+    }
+
+    justified = settings.justified ?? false;
+    justifiedElement = null;
+    if (justified) {
+      applyJustify(chain[chainIndex]);
+      justifiedElement = chain[chainIndex];
+    }
+  }
+
   function selectElement(element, options = {}) {
     // Select a new element: build its ancestor chain, reset the panel, and
     // apply the given (or default) width/centering/justification to it
-
-    const width = options.width ?? `${DEFAULT_WIDTH_EM}em`;
-    const shouldCenter = options.centered ?? true;
-    const shouldJustify = options.justified ?? false;
 
     clearWidth(styledElement);
     clearCenter(centeredElement);
     clearJustify(justifiedElement);
 
-    chain = buildChain(element);
-    chainIndex = 0;
-    widthValue = null;
-    styledElement = null;
-    centered = false;
-    centeredElement = null;
-    justified = false;
-    justifiedElement = null;
+    applyStateToElement(element, options);
 
     slider.max = String(chain.length - 1);
     slider.value = "0";
     setControlsDisabled(false);
 
-    widthValue = width;
-    const emMatch = width && width.match(/^(\d+(?:\.\d+)?)em$/);
+    const emMatch = widthValue && widthValue.match(/^(\d+(?:\.\d+)?)em$/);
     widthSlider.value = emMatch ? emMatch[1] : String(DEFAULT_WIDTH_EM);
-    widthInput.value = width || "";
-    applyWidthToCurrent();
-
-    centerToggle.checked = shouldCenter;
-    if (shouldCenter) {
-      centered = true;
-      applyCenter(chain[chainIndex]);
-      centeredElement = chain[chainIndex];
-    }
-
-    justifyToggle.checked = shouldJustify;
-    if (shouldJustify) {
-      justified = true;
-      applyJustify(chain[chainIndex]);
-      justifiedElement = chain[chainIndex];
-    }
+    widthInput.value = widthValue || "";
+    centerToggle.checked = centered;
+    justifyToggle.checked = justified;
 
     updateSelection();
     window.addEventListener("scroll", onReposition, true);
@@ -485,4 +508,6 @@
       else activate();
     }
   });
+
+  silentlyRestoreOnLoad();
 })();
