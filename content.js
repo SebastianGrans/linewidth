@@ -5,6 +5,7 @@
 
   const DEFAULT_WIDTH_EM = 45;
   const PICKER_ICON_URL = browser.runtime.getURL("picker.svg");
+  const DELETE_ICON_URL = browser.runtime.getURL("delete.svg");
   const STORAGE_KEY = `${location.origin}${location.pathname}`;
 
   let active = false;
@@ -40,6 +41,7 @@
       <label id="linewidth-justify-label">
         <input id="linewidth-justify-toggle" type="checkbox" /> Justify
       </label>
+      <button id="linewidth-delete" type="button" title="Delete saved settings" aria-label="Delete saved settings" style="display: none"></button>
       <button id="linewidth-close" type="button" aria-label="Close">&times;</button>
     </div>
   `;
@@ -53,7 +55,9 @@
   const justifyToggle = panel.querySelector("#linewidth-justify-toggle");
   const closeButton = panel.querySelector("#linewidth-close");
   const repickButton = panel.querySelector("#linewidth-repick");
+  const deleteButton = panel.querySelector("#linewidth-delete");
   repickButton.style.backgroundImage = `url("${PICKER_ICON_URL}")`;
+  deleteButton.style.backgroundImage = `url("${DELETE_ICON_URL}")`;
 
   function describe(element) {
     // Generate a string composed of
@@ -140,6 +144,39 @@
         justified,
       },
     });
+
+    deleteButton.style.display = "";
+  }
+
+  async function refreshDeleteButtonVisibility() {
+    // Show the delete button only if this page currently has saved settings
+
+    const stored = await browser.storage.local.get(STORAGE_KEY);
+    deleteButton.style.display = stored[STORAGE_KEY] ? "" : "none";
+  }
+
+  function onDeleteClick() {
+    // Remove saved settings for this page and clear the currently applied styling
+
+    browser.storage.local.remove(STORAGE_KEY);
+    deleteButton.style.display = "none";
+
+    clearWidth(styledElement);
+    clearCenter(centeredElement);
+    clearJustify(justifiedElement);
+
+    chain = [];
+    chainIndex = 0;
+    widthValue = null;
+    styledElement = null;
+    centered = false;
+    centeredElement = null;
+    justified = false;
+    justifiedElement = null;
+
+    updateHighlight(null);
+    label.textContent = "";
+    startPicking();
   }
 
   async function restoreSettings() {
@@ -463,6 +500,7 @@
     document.body.appendChild(highlightBox);
     document.body.appendChild(panel);
     document.addEventListener("keydown", onKeyDown, true);
+    refreshDeleteButtonVisibility();
 
     const remembered = chain[chainIndex];
     if (remembered && remembered.isConnected) {
@@ -492,6 +530,7 @@
 
   closeButton.addEventListener("click", deactivate);
   repickButton.addEventListener("click", onRepickClick);
+  deleteButton.addEventListener("click", onDeleteClick);
   slider.addEventListener("input", onSliderInput);
   slider.addEventListener("change", saveSettings);
   widthSlider.addEventListener("input", onWidthSliderInput);

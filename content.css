@@ -35,7 +35,8 @@
   cursor: not-allowed;
 }
 
-#linewidth-repick {
+#linewidth-repick,
+#linewidth-delete {
   flex: none;
   width: 22px;
   height: 22px;
@@ -48,11 +49,13 @@
   cursor: pointer;
 }
 
-#linewidth-repick:hover:not(:disabled) {
+#linewidth-repick:hover:not(:disabled),
+#linewidth-delete:hover:not(:disabled) {
   background-color: #444;
 }
 
-#linewidth-repick:disabled {
+#linewidth-repick:disabled,
+#linewidth-delete:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }

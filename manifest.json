@@ -13,7 +13,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["picker.svg"],
+      "resources": ["picker.svg", "delete.svg"],
       "matches": ["<all_urls>"]
     }
   ]
