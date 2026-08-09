@@ -1,4 +1,5 @@
 (() => {
+  // Guard against the content script being injected more than once
   if (window.__linewidthInjected) return;
   window.__linewidthInjected = true;
 
@@ -9,9 +10,9 @@
   let chain = [];
   let chainIndex = 0;
   let widthValue = null;
-  let styledEl = null;
+  let styledElement = null;
   let centered = false;
-  let centeredEl = null;
+  let centeredElement = null;
 
   const highlightBox = document.createElement("div");
   highlightBox.id = "linewidth-highlight";
@@ -45,22 +46,30 @@
   const repickButton = panel.querySelector("#linewidth-repick");
   repickButton.style.backgroundImage = `url("${PICKER_ICON_URL}")`;
 
-  function describe(el) {
-    if (!el) return "";
-    let s = el.tagName.toLowerCase();
-    if (el.id) s += `#${el.id}`;
-    if (typeof el.className === "string" && el.className.trim()) {
-      s += "." + el.className.trim().split(/\s+/).join(".");
+  function describe(element) {
+    // Generate a string composed of
+    //  <element type>.<element class>
+    // that is used as element label
+
+    if (!element) return "";
+
+    let string = element.tagName.toLowerCase();
+    if (element.id) string += `#${element.id}`;
+    if (typeof element.className === "string" && element.className.trim()) {
+      string += "." + element.className.trim().split(/\s+/).join(".");
     }
-    return s;
+    return string;
   }
 
-  function updateHighlight(el) {
-    if (!el) {
+  function updateHighlight(element) {
+    // Position the highlight box over the given element, or hide it if none is given
+
+    if (!element) {
       highlightBox.style.display = "none";
       return;
     }
-    const rect = el.getBoundingClientRect();
+
+    const rect = element.getBoundingClientRect();
     highlightBox.style.display = "block";
     highlightBox.style.left = `${rect.left}px`;
     highlightBox.style.top = `${rect.top}px`;
@@ -68,9 +77,11 @@
     highlightBox.style.height = `${rect.height}px`;
   }
 
-  function buildChain(el) {
+  function buildChain(element) {
+    // Build the list of ancestors for the given element, from itself up to <html>
+
     const result = [];
-    let node = el;
+    let node = element;
     while (node && node.nodeType === 1) {
       result.push(node);
       if (node === document.documentElement) break;
@@ -79,11 +90,15 @@
     return result;
   }
 
-  function onMouseMove(e) {
-    updateHighlight(e.target);
+  function onMouseMove(event) {
+    // Follow the cursor with the highlight box while picking
+
+    updateHighlight(event.target);
   }
 
   function setControlsDisabled(disabled) {
+    // Enable or disable all interactive controls in the panel
+
     hint.style.display = disabled ? "block" : "none";
     slider.disabled = disabled;
     widthSlider.disabled = disabled;
@@ -93,15 +108,18 @@
   }
 
   function selectElement(element) {
-    clearWidth(styledEl);
-    clearCenter(centeredEl);
+    // Select a new element: build its ancestor chain, reset the panel to
+    // its defaults, and apply the default width/centering to it
+
+    clearWidth(styledElement);
+    clearCenter(centeredElement);
 
     chain = buildChain(element);
     chainIndex = 0;
     widthValue = null;
-    styledEl = null;
+    styledElement = null;
     centered = false;
-    centeredEl = null;
+    centeredElement = null;
 
     slider.max = String(chain.length - 1);
     slider.value = "0";
@@ -116,7 +134,7 @@
 
     centered = true;
     applyCenter(chain[chainIndex]);
-    centeredEl = chain[chainIndex];
+    centeredElement = chain[chainIndex];
 
     updateSelection();
     window.addEventListener("scroll", onReposition, true);
@@ -124,111 +142,144 @@
   }
 
   function startPicking() {
+    // Enter picking mode: disable the panel and listen for hover/click on the page
+
     setControlsDisabled(true);
     document.addEventListener("mousemove", onMouseMove, true);
     document.addEventListener("click", onClick, true);
   }
 
   function stopPicking() {
+    // Stop listening for hover/click on the page
+
     document.removeEventListener("mousemove", onMouseMove, true);
     document.removeEventListener("click", onClick, true);
   }
 
-  function onClick(e) {
-    if (panel.contains(e.target)) return;
+  function onClick(event) {
+    // Ignore clicks on our own panel, otherwise select the clicked element
 
-    e.preventDefault();
-    e.stopPropagation();
+    if (panel.contains(event.target)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
     stopPicking();
-    selectElement(e.target);
+    selectElement(event.target);
   }
 
   function onRepickClick() {
+    // Let the user pick a different element while keeping the panel open
+
     startPicking();
   }
 
   function updateSelection() {
-    const el = chain[chainIndex];
-    updateHighlight(el);
-    label.textContent = describe(el);
+    // Refresh the highlight box and label for the current chain element
+
+    const element = chain[chainIndex];
+    updateHighlight(element);
+    label.textContent = describe(element);
   }
 
   function onReposition() {
+    // Keep the highlight box aligned after scroll/resize
+
     updateHighlight(chain[chainIndex]);
   }
 
-  function clearWidth(el) {
-    if (el) el.style.removeProperty("width");
+  function clearWidth(element) {
+    // Remove any forced width from the given element
+
+    if (element) element.style.removeProperty("width");
   }
 
   function applyWidthToCurrent() {
-    const el = chain[chainIndex];
-    if (!el) return;
-    if (styledEl && styledEl !== el) clearWidth(styledEl);
+    // Apply the current width value to the current chain element, clearing
+    // it from whichever element had it before
+
+    const element = chain[chainIndex];
+    if (!element) return;
+
+    if (styledElement && styledElement !== element) clearWidth(styledElement);
     if (widthValue) {
-      el.style.width = widthValue;
-      styledEl = el;
+      element.style.width = widthValue;
+      styledElement = element;
     } else {
-      styledEl = null;
+      styledElement = null;
     }
-    updateHighlight(el);
+    updateHighlight(element);
   }
 
-  function applyCenter(el) {
-    el.style.marginLeft = "auto";
-    el.style.marginRight = "auto";
+  function applyCenter(element) {
+    // Center the element horizontally via auto margins
+
+    element.style.marginLeft = "auto";
+    element.style.marginRight = "auto";
   }
 
-  function clearCenter(el) {
-    if (!el) return;
-    el.style.removeProperty("margin-left");
-    el.style.removeProperty("margin-right");
+  function clearCenter(element) {
+    // Remove centering from the given element
+
+    if (!element) return;
+
+    element.style.removeProperty("margin-left");
+    element.style.removeProperty("margin-right");
   }
 
-  function onSliderInput(e) {
-    const oldEl = chain[chainIndex];
-    chainIndex = Number(e.target.value);
-    const newEl = chain[chainIndex];
+  function onSliderInput(event) {
+    // Move to a different ancestor, carrying the forced width/centering
+    // over from the previously selected element
 
-    if (widthValue && styledEl === oldEl) {
-      clearWidth(oldEl);
-      newEl.style.width = widthValue;
-      styledEl = newEl;
+    const previousElement = chain[chainIndex];
+    chainIndex = Number(event.target.value);
+    const newElement = chain[chainIndex];
+
+    if (widthValue && styledElement === previousElement) {
+      clearWidth(previousElement);
+      newElement.style.width = widthValue;
+      styledElement = newElement;
     }
 
-    if (centered && centeredEl === oldEl) {
-      clearCenter(oldEl);
-      applyCenter(newEl);
-      centeredEl = newEl;
+    if (centered && centeredElement === previousElement) {
+      clearCenter(previousElement);
+      applyCenter(newElement);
+      centeredElement = newElement;
     }
 
     updateSelection();
   }
 
-  function onCenterToggle(e) {
-    centered = e.target.checked;
-    const el = chain[chainIndex];
-    if (!el) return;
+  function onCenterToggle(event) {
+    // Toggle centering on/off for the current chain element
+
+    centered = event.target.checked;
+    const element = chain[chainIndex];
+    if (!element) return;
 
     if (centered) {
-      applyCenter(el);
-      centeredEl = el;
+      applyCenter(element);
+      centeredElement = element;
     } else {
-      clearCenter(el);
-      centeredEl = null;
+      clearCenter(element);
+      centeredElement = null;
     }
 
-    updateHighlight(el);
+    updateHighlight(element);
   }
 
-  function onWidthSliderInput(e) {
-    widthValue = `${e.target.value}em`;
+  function onWidthSliderInput(event) {
+    // Apply the width chosen on the slider, in em
+
+    widthValue = `${event.target.value}em`;
     widthInput.value = widthValue;
     applyWidthToCurrent();
   }
 
-  function onWidthInputChange(e) {
-    const raw = e.target.value.trim();
+  function onWidthInputChange(event) {
+    // Apply a manually typed width, syncing the slider back if it's a
+    // plain em value within its range
+
+    const raw = event.target.value.trim();
     widthValue = raw || null;
 
     const match = raw.match(/^(\d+(?:\.\d+)?)em$/);
@@ -243,12 +294,18 @@
     applyWidthToCurrent();
   }
 
-  function onKeyDown(e) {
-    if (e.key === "Escape") deactivate();
+  function onKeyDown(event) {
+    // Close the picker on Escape
+
+    if (event.key === "Escape") deactivate();
   }
 
   function activate() {
+    // Show the panel, resuming a remembered selection if it's still on the
+    // page, otherwise entering picking mode
+
     if (active) return;
+
     active = true;
     document.body.appendChild(highlightBox);
     document.body.appendChild(panel);
@@ -266,6 +323,9 @@
   }
 
   function deactivate() {
+    // Hide the panel and stop all picker listeners, keeping whatever
+    // width/centering was already applied to the page
+
     active = false;
     stopPicking();
     document.removeEventListener("keydown", onKeyDown, true);
