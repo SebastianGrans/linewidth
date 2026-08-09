@@ -3,6 +3,7 @@
   window.__linewidthInjected = true;
 
   const DEFAULT_WIDTH_EM = 45;
+  const PICKER_ICON_URL = browser.runtime.getURL("picker.svg");
 
   let active = false;
   let chain = [];
@@ -20,8 +21,9 @@
   panel.innerHTML = `
     <div id="linewidth-hint">Click on an element</div>
     <div id="linewidth-row-hierarchy">
-      <div id="linewidth-label"></div>
-      <input id="linewidth-slider" type="range" min="0" max="0" value="0" step="1" title="Select ancestor" />
+    <input id="linewidth-slider" type="range" min="0" max="0" value="0" step="1" title="Select ancestor" />
+    <div id="linewidth-label"></div>
+      <button id="linewidth-repick" type="button" title="Re-select element" aria-label="Re-select element"></button>
     </div>
     <div id="linewidth-row-width">
       <input id="linewidth-width-slider" type="range" min="20" max="100" value="${DEFAULT_WIDTH_EM}" step="1" title="Width (em)" />
@@ -40,6 +42,8 @@
   const widthInput = panel.querySelector("#linewidth-width-input");
   const centerToggle = panel.querySelector("#linewidth-center-toggle");
   const closeButton = panel.querySelector("#linewidth-close");
+  const repickButton = panel.querySelector("#linewidth-repick");
+  repickButton.style.backgroundImage = `url("${PICKER_ICON_URL}")`;
 
   function describe(el) {
     if (!el) return "";
@@ -85,15 +89,14 @@
     widthSlider.disabled = disabled;
     widthInput.disabled = disabled;
     centerToggle.disabled = disabled;
+    repickButton.disabled = disabled;
   }
 
-  function onClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    document.removeEventListener("mousemove", onMouseMove, true);
-    document.removeEventListener("click", onClick, true);
+  function selectElement(element) {
+    clearWidth(styledEl);
+    clearCenter(centeredEl);
 
-    chain = buildChain(e.target);
+    chain = buildChain(element);
     chainIndex = 0;
     widthValue = null;
     styledEl = null;
@@ -118,6 +121,30 @@
     updateSelection();
     window.addEventListener("scroll", onReposition, true);
     window.addEventListener("resize", onReposition);
+  }
+
+  function startPicking() {
+    setControlsDisabled(true);
+    document.addEventListener("mousemove", onMouseMove, true);
+    document.addEventListener("click", onClick, true);
+  }
+
+  function stopPicking() {
+    document.removeEventListener("mousemove", onMouseMove, true);
+    document.removeEventListener("click", onClick, true);
+  }
+
+  function onClick(e) {
+    if (panel.contains(e.target)) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    stopPicking();
+    selectElement(e.target);
+  }
+
+  function onRepickClick() {
+    startPicking();
   }
 
   function updateSelection() {
@@ -225,30 +252,31 @@
     active = true;
     document.body.appendChild(highlightBox);
     document.body.appendChild(panel);
-    setControlsDisabled(true);
-    document.addEventListener("mousemove", onMouseMove, true);
-    document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", onKeyDown, true);
+
+    const remembered = chain[chainIndex];
+    if (remembered && remembered.isConnected) {
+      setControlsDisabled(false);
+      updateSelection();
+      window.addEventListener("scroll", onReposition, true);
+      window.addEventListener("resize", onReposition);
+    } else {
+      startPicking();
+    }
   }
 
   function deactivate() {
     active = false;
-    document.removeEventListener("mousemove", onMouseMove, true);
-    document.removeEventListener("click", onClick, true);
+    stopPicking();
     document.removeEventListener("keydown", onKeyDown, true);
     window.removeEventListener("scroll", onReposition, true);
     window.removeEventListener("resize", onReposition);
     highlightBox.remove();
     panel.remove();
-    chain = [];
-    chainIndex = 0;
-    widthValue = null;
-    styledEl = null;
-    centered = false;
-    centeredEl = null;
   }
 
   closeButton.addEventListener("click", deactivate);
+  repickButton.addEventListener("click", onRepickClick);
   slider.addEventListener("input", onSliderInput);
   widthSlider.addEventListener("input", onWidthSliderInput);
   widthInput.addEventListener("input", onWidthInputChange);

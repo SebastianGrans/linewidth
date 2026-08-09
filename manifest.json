@@ -9,5 +9,11 @@
   },
   "background": {
     "scripts": ["background.js"]
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["picker.svg"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

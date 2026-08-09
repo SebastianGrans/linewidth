@@ -35,6 +35,28 @@
   cursor: not-allowed;
 }
 
+#linewidth-repick {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  background-color: #333;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#linewidth-repick:hover:not(:disabled) {
+  background-color: #444;
+}
+
+#linewidth-repick:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 #linewidth-row-hierarchy,
 #linewidth-row-width {
   display: flex;
@@ -43,8 +65,8 @@
 }
 
 #linewidth-label {
-  width: 190px;
-  flex: none;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

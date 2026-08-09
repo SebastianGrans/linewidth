@@ -66,6 +66,9 @@ Could we have "short term memory" that is persistent across a session?
 E.g. a refresh shouldn't restore to the defaults. And if you click on
 a link, and then go back, the settings should persist.
 
+Edit: Seems like the browser still remebers it if you go back.
+Probably because of cache
+
 #### Centering [DONE]
 
 Maybe add a toggle to try to center the now less-wide text?
