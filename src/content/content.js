@@ -4,8 +4,8 @@
   window.__linewidthInjected = true;
 
   const DEFAULT_WIDTH_EM = 45;
-  const PICKER_ICON_URL = browser.runtime.getURL("picker.svg");
-  const DELETE_ICON_URL = browser.runtime.getURL("delete.svg");
+  const PICKER_ICON_URL = browser.runtime.getURL("src/icons/picker.svg");
+  const DELETE_ICON_URL = browser.runtime.getURL("src/icons/delete.svg");
   const STORAGE_KEY = `${location.origin}${location.pathname}`;
 
   let active = false;

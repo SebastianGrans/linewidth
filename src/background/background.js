@@ -2,8 +2,8 @@ async function ensureContentScript(tabId) {
   try {
     await browser.tabs.sendMessage(tabId, { type: "ping" });
   } catch {
-    await browser.scripting.insertCSS({ target: { tabId }, files: ["content.css"] });
-    await browser.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+    await browser.scripting.insertCSS({ target: { tabId }, files: ["src/content/content.css"] });
+    await browser.scripting.executeScript({ target: { tabId }, files: ["src/content/content.js"] });
   }
 }
 
@@ -15,8 +15,8 @@ async function registerOrigin(originPattern) {
     {
       id: originPattern,
       matches: [originPattern],
-      js: ["content.js"],
-      css: ["content.css"],
+      js: ["src/content/content.js"],
+      css: ["src/content/content.css"],
       runAt: "document_idle",
     },
   ]);

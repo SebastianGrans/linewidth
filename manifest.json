@@ -9,15 +9,15 @@
     "default_title": "Pick an element"
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["src/background/background.js"]
   },
   "options_ui": {
-    "page": "dashboard.html",
+    "page": "src/dashboard/dashboard.html",
     "open_in_tab": true
   },
   "web_accessible_resources": [
     {
-      "resources": ["picker.svg", "delete.svg"],
+      "resources": ["src/icons/picker.svg", "src/icons/delete.svg"],
       "matches": ["<all_urls>"]
     }
   ]
