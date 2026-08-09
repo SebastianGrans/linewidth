@@ -42,6 +42,7 @@
         <input id="linewidth-justify-toggle" type="checkbox" /> Justify
       </label>
       <button id="linewidth-delete" type="button" title="Delete saved settings" aria-label="Delete saved settings" style="display: none"></button>
+      <button id="linewidth-manage" type="button" title="Manage saved pages" aria-label="Manage saved pages">&#9881;</button>
       <button id="linewidth-close" type="button" aria-label="Close">&times;</button>
     </div>
   `;
@@ -54,6 +55,7 @@
   const centerToggle = panel.querySelector("#linewidth-center-toggle");
   const justifyToggle = panel.querySelector("#linewidth-justify-toggle");
   const closeButton = panel.querySelector("#linewidth-close");
+  const manageButton = panel.querySelector("#linewidth-manage");
   const repickButton = panel.querySelector("#linewidth-repick");
   const deleteButton = panel.querySelector("#linewidth-delete");
   repickButton.style.backgroundImage = `url("${PICKER_ICON_URL}")`;
@@ -529,6 +531,9 @@
   }
 
   closeButton.addEventListener("click", deactivate);
+  manageButton.addEventListener("click", () => {
+    browser.runtime.sendMessage({ type: "open-dashboard" });
+  });
   repickButton.addEventListener("click", onRepickClick);
   deleteButton.addEventListener("click", onDeleteClick);
   slider.addEventListener("input", onSliderInput);

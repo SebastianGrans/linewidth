@@ -56,3 +56,21 @@ browser.action.onClicked.addListener(async (tab) => {
   await ensureContentScript(tab.id);
   await browser.tabs.sendMessage(tab.id, { type: "toggle-picker" });
 });
+
+browser.runtime.onMessage.addListener((message) => {
+  if (message.type === "open-dashboard") browser.runtime.openOptionsPage();
+});
+
+browser.runtime.onInstalled.addListener(() => {
+  // Create this once at install/update rather than on every background
+  // script run, to avoid "duplicate id" errors on re-registration
+  browser.contextMenus.create({
+    id: "open-dashboard",
+    title: "Open Dashboard",
+    contexts: ["action"],
+  });
+});
+
+browser.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId === "open-dashboard") browser.runtime.openOptionsPage();
+});
