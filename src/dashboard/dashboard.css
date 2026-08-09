@@ -76,10 +76,23 @@ h1 {
   color: #8ab4f8;
 }
 
-.row-actions {
+.row-actions,
+.site-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.site-card .delete-site,
+.site-card .delete {
+  background: #c44444;
+  border-color: #7a3b3b;
+  color: #fff;
+}
+
+.site-card .delete-site:hover,
+.site-card .delete:hover {
+  background: #c61313;
 }
 
 .switch {
@@ -117,10 +130,10 @@ h1 {
   transition: transform 0.15s;
 }
 
-.switch input:checked + .switch-slider {
-  background: #8ab4f8;
+.switch input:checked+.switch-slider {
+  background: #34c643;
 }
 
-.switch input:checked + .switch-slider::before {
+.switch input:checked+.switch-slider::before {
   transform: translateX(14px);
 }

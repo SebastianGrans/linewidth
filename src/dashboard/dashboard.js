@@ -84,6 +84,14 @@ function renderSiteCard(origin, site) {
     });
   }
 
+  card.querySelector(".delete-site").addEventListener("click", async () => {
+    const pattern = `${origin}/*`;
+    await browser.storage.local.remove(site.pages.map((page) => page.key));
+    if (site.granted) await browser.permissions.remove({ origins: [pattern] });
+    if (site.registered) await browser.scripting.unregisterContentScripts({ ids: [pattern] });
+    render();
+  });
+
   const list = card.querySelector("ul");
   for (const page of site.pages) {
     list.appendChild(renderPageRow(origin, site, page));
