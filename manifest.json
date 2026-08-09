@@ -3,7 +3,7 @@
   "name": "linewidth",
   "version": "0.1.0",
   "description": "Pick an HTML element on the page and step through its ancestor hierarchy.",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_title": "Pick an element"
   },

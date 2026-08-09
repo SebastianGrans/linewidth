@@ -81,7 +81,20 @@ https://extensionworkshop.com/documentation/publish/package-your-extension/
 
 * We probably want icons
 
+The page recommended using `web-ext` to package the extension.
 
+https://github.com/mozilla/web-ext
+
+So I installed NodeJS (LTS) and npm.
+
+```bash
+npm install --save-dev web-ext
+```
+
+Now I can run the extension in a temporary browser that automatically
+reloads when code changes!
+
+And it has a linting feature :)
 
 ## Development flow
 

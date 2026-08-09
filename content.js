@@ -5,6 +5,7 @@
 
   const DEFAULT_WIDTH_EM = 45;
   const PICKER_ICON_URL = browser.runtime.getURL("picker.svg");
+  const STORAGE_KEY = `${location.origin}${location.pathname}`;
 
   let active = false;
   let chain = [];
@@ -98,6 +99,69 @@
     return result;
   }
 
+  function buildSelector(element) {
+    // Build a CSS selector that can re-find this element after a reload,
+    // stopping early at the nearest ancestor with an id
+
+    const parts = [];
+    let node = element;
+
+    while (node && node !== document.documentElement) {
+      if (node.id) {
+        parts.unshift(`#${CSS.escape(node.id)}`);
+        return parts.join(" > ");
+      }
+
+      const parent = node.parentElement;
+      if (!parent) break;
+
+      const siblingsOfSameTag = Array.from(parent.children).filter(
+        (child) => child.tagName === node.tagName
+      );
+      const position = siblingsOfSameTag.indexOf(node) + 1;
+      parts.unshift(`${node.tagName.toLowerCase()}:nth-of-type(${position})`);
+      node = parent;
+    }
+
+    return parts.join(" > ");
+  }
+
+  function saveSettings() {
+    // Persist the current selection and settings for this page
+
+    const element = chain[chainIndex];
+    if (!element) return;
+
+    browser.storage.local.set({
+      [STORAGE_KEY]: {
+        selector: buildSelector(element),
+        width: widthValue,
+        centered,
+        justified,
+      },
+    });
+  }
+
+  async function restoreSettings() {
+    // Look up saved settings for this page and re-apply them if the
+    // saved element can still be found
+
+    const stored = await browser.storage.local.get(STORAGE_KEY);
+    const settings = stored[STORAGE_KEY];
+    if (!settings) return false;
+
+    let element = null;
+    try {
+      element = document.querySelector(settings.selector);
+    } catch {
+      element = null;
+    }
+    if (!element) return false;
+
+    selectElement(element, settings);
+    return true;
+  }
+
   function onMouseMove(event) {
     // Follow the cursor with the highlight box while picking
 
@@ -116,9 +180,13 @@
     repickButton.disabled = disabled;
   }
 
-  function selectElement(element) {
-    // Select a new element: build its ancestor chain, reset the panel to
-    // its defaults, and apply the default width/centering to it
+  function selectElement(element, options = {}) {
+    // Select a new element: build its ancestor chain, reset the panel, and
+    // apply the given (or default) width/centering/justification to it
+
+    const width = options.width ?? `${DEFAULT_WIDTH_EM}em`;
+    const shouldCenter = options.centered ?? true;
+    const shouldJustify = options.justified ?? false;
 
     clearWidth(styledElement);
     clearCenter(centeredElement);
@@ -135,23 +203,32 @@
 
     slider.max = String(chain.length - 1);
     slider.value = "0";
-
-    widthSlider.value = String(DEFAULT_WIDTH_EM);
-    widthInput.value = `${DEFAULT_WIDTH_EM}em`;
-    centerToggle.checked = true;
-    justifyToggle.checked = false;
     setControlsDisabled(false);
 
-    widthValue = `${DEFAULT_WIDTH_EM}em`;
+    widthValue = width;
+    const emMatch = width && width.match(/^(\d+(?:\.\d+)?)em$/);
+    widthSlider.value = emMatch ? emMatch[1] : String(DEFAULT_WIDTH_EM);
+    widthInput.value = width || "";
     applyWidthToCurrent();
 
-    centered = true;
-    applyCenter(chain[chainIndex]);
-    centeredElement = chain[chainIndex];
+    centerToggle.checked = shouldCenter;
+    if (shouldCenter) {
+      centered = true;
+      applyCenter(chain[chainIndex]);
+      centeredElement = chain[chainIndex];
+    }
+
+    justifyToggle.checked = shouldJustify;
+    if (shouldJustify) {
+      justified = true;
+      applyJustify(chain[chainIndex]);
+      justifiedElement = chain[chainIndex];
+    }
 
     updateSelection();
     window.addEventListener("scroll", onReposition, true);
     window.addEventListener("resize", onReposition);
+    saveSettings();
   }
 
   function startPicking() {
@@ -298,6 +375,7 @@
     }
 
     updateHighlight(element);
+    saveSettings();
   }
 
   function onJustifyToggle(event) {
@@ -316,6 +394,7 @@
     }
 
     updateHighlight(element);
+    saveSettings();
   }
 
   function onWidthSliderInput(event) {
@@ -351,9 +430,9 @@
     if (event.key === "Escape") deactivate();
   }
 
-  function activate() {
-    // Show the panel, resuming a remembered selection if it's still on the
-    // page, otherwise entering picking mode
+  async function activate() {
+    // Show the panel: resume an in-memory selection if it's still on the
+    // page, else try a saved one for this page, else enter picking mode
 
     if (active) return;
 
@@ -368,9 +447,11 @@
       updateSelection();
       window.addEventListener("scroll", onReposition, true);
       window.addEventListener("resize", onReposition);
-    } else {
-      startPicking();
+      return;
     }
+
+    const restored = await restoreSettings();
+    if (!restored) startPicking();
   }
 
   function deactivate() {
@@ -389,8 +470,11 @@
   closeButton.addEventListener("click", deactivate);
   repickButton.addEventListener("click", onRepickClick);
   slider.addEventListener("input", onSliderInput);
+  slider.addEventListener("change", saveSettings);
   widthSlider.addEventListener("input", onWidthSliderInput);
+  widthSlider.addEventListener("change", saveSettings);
   widthInput.addEventListener("input", onWidthInputChange);
+  widthInput.addEventListener("change", saveSettings);
   centerToggle.addEventListener("change", onCenterToggle);
   justifyToggle.addEventListener("change", onJustifyToggle);
 
