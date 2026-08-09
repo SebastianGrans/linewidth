@@ -1,0 +1,47 @@
+#linewidth-highlight {
+  position: fixed;
+  pointer-events: none;
+  z-index: 2147483647;
+  border: 2px solid #ff4081;
+  background: rgba(255, 64, 129, 0.1);
+  box-sizing: border-box;
+  display: none;
+}
+
+#linewidth-panel {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  background: #1e1e1e;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font: 13px/1.4 system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#linewidth-label {
+  min-width: 120px;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#linewidth-slider {
+  width: 140px;
+}
+
+#linewidth-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}

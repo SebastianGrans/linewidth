@@ -1,0 +1,18 @@
+{
+    "[markdown]": {
+        "editor.rulers": [
+            70
+        ],
+        "editor.pasteAs.preferences": [
+            "markdown.link"
+        ],
+        "editor.defaultFormatter": "marvhen.reflow-markdown",
+        "editor.formatOnSave": true,
+        "editor.wordWrapColumn": 70,
+        "editor.wordWrap": "bounded",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.markdownlint": "explicit"
+        }
+    },
+    "reflowMarkdown.preferredLineLength": 70,
+}
