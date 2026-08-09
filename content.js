@@ -18,6 +18,7 @@
   const panel = document.createElement("div");
   panel.id = "linewidth-panel";
   panel.innerHTML = `
+    <div id="linewidth-hint">Click on an element</div>
     <div id="linewidth-row-hierarchy">
       <div id="linewidth-label"></div>
       <input id="linewidth-slider" type="range" min="0" max="0" value="0" step="1" title="Select ancestor" />
@@ -70,6 +71,14 @@
     updateHighlight(e.target);
   }
 
+  function setControlsDisabled(disabled) {
+    panel.querySelector("#linewidth-hint").style.display = disabled ? "block" : "none";
+    panel.querySelector("#linewidth-slider").disabled = disabled;
+    panel.querySelector("#linewidth-width-slider").disabled = disabled;
+    panel.querySelector("#linewidth-width-input").disabled = disabled;
+    panel.querySelector("#linewidth-center-toggle").disabled = disabled;
+  }
+
   function onClick(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -92,11 +101,11 @@
     widthSlider.value = String(DEFAULT_WIDTH_EM);
     widthInput.value = `${DEFAULT_WIDTH_EM}em`;
     panel.querySelector("#linewidth-center-toggle").checked = false;
+    setControlsDisabled(false);
 
     widthValue = `${DEFAULT_WIDTH_EM}em`;
     applyWidthToCurrent();
     updateSelection();
-    document.body.appendChild(panel);
     window.addEventListener("scroll", onReposition, true);
     window.addEventListener("resize", onReposition);
   }
@@ -206,6 +215,8 @@
     if (active) return;
     active = true;
     document.body.appendChild(highlightBox);
+    document.body.appendChild(panel);
+    setControlsDisabled(true);
     document.addEventListener("mousemove", onMouseMove, true);
     document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", onKeyDown, true);
