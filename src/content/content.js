@@ -508,6 +508,10 @@
     document.addEventListener("keydown", onKeyDown, true);
     refreshDeleteButtonVisibility();
 
+    // Wait for the page-load silent restore to settle first, so it can't
+    // race with the restoreSettings() call below over the same chain state
+    await initialRestorePromise;
+
     const remembered = chain[chainIndex];
     if (remembered && remembered.isConnected) {
       setControlsDisabled(false);
@@ -557,5 +561,5 @@
     }
   });
 
-  silentlyRestoreOnLoad();
+  const initialRestorePromise = silentlyRestoreOnLoad();
 })();

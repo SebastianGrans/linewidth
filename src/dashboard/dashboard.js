@@ -53,6 +53,24 @@ function openAndActivate(url) {
   });
 }
 
+async function registerOrigin(originPattern) {
+  // Register the content script to auto-run on this origin, mirroring
+  // background.js's registerOrigin so the dashboard can grant access itself
+
+  const existing = await browser.scripting.getRegisteredContentScripts({ ids: [originPattern] });
+  if (existing.length) return;
+
+  await browser.scripting.registerContentScripts([
+    {
+      id: originPattern,
+      matches: [originPattern],
+      js: ["src/content/content.js"],
+      css: ["src/content/content.css"],
+      runAt: "document_idle",
+    },
+  ]);
+}
+
 function describeSettings(settings) {
   // Build a short human-readable summary of a saved page's settings
 
@@ -73,13 +91,28 @@ function renderSiteCard(origin, site) {
   card.querySelector(".status").textContent =
     site.granted && site.registered ? "Auto-applies on load" : "Click-to-restore only";
 
+  const enableButton = card.querySelector(".enable");
+  if (!site.granted) {
+    enableButton.hidden = false;
+    enableButton.addEventListener("click", async () => {
+      const pattern = `${origin}/*`;
+      const granted = await browser.permissions.request({ origins: [pattern] });
+      if (!granted) return;
+
+      await registerOrigin(pattern);
+      render();
+    });
+  }
+
   const revokeButton = card.querySelector(".revoke");
-  if (site.granted || site.registered) {
+  if (site.granted) {
     revokeButton.hidden = false;
     revokeButton.addEventListener("click", async () => {
+      // Only remove the permission, leaving the registration in place: a
+      // registered content script simply won't run without host permission
+      // for its pattern, and re-granting later doesn't need to re-register.
       const pattern = `${origin}/*`;
       await browser.permissions.remove({ origins: [pattern] });
-      await browser.scripting.unregisterContentScripts({ ids: [pattern] });
       render();
     });
   }
