@@ -20,7 +20,7 @@ more readable.
 
 ## Development phases
 
-### Phase 1
+### Phase 1 [DONE]
 
 In order to create this extension, we must first be able to easily
 select the correct HTML element to adjust the width of.
@@ -30,25 +30,53 @@ click on an element. The element boundaries should be made visible.
 Then with a slider, the user can go up the heirarcy until the correct
 parent element is choosen.
 
-### Phase 2
+### Phase 2 [DONE]
 
 Once the correct element has been selected, the user can then specify
 the width with another slider (and also a field for manually typing
 the preferred width).
 
-### Phase 3
-
-Packaging. Now we're manually loading this through the debug interface
-of firefix, but other users need a simple way to install it.
-
-
-
 ### Phase 4
 
-Fancy features
+Currently, we have an MVP, but there are other cool things we could do
+as well!
 
-* Remembering this across sites
-* Try to center the div (a toggle button on the gui)
+#### Interface 
+
+Currently, you click on the extension in the extension panel, but can
+we also add it to the context menu?
+
+Add a `Settings` page that you can access by right clicking the
+extension?
+
+#### Font
+
+Add ability to change:
+
+  * Size
+  * typeface
+  * ??
+
+#### Memory
+
+Might be useful to remeber this between visits. This would require a
+button to "forget" settings for a site.
+
+Could we have "short term memory" that is persistent across a session?
+E.g. a refresh shouldn't restore to the defaults. And if you click on
+a link, and then go back, the settings should persist.
+
+#### Centering [DONE]
+
+Maybe add a toggle to try to center the now less-wide text?
+
+### Phase N
+
+Figure out packaging!
+
+https://extensionworkshop.com/documentation/publish/package-your-extension/
+
+* We probably want icons
 
 
 

@@ -9,6 +9,8 @@
   let chainIndex = 0;
   let widthValue = null;
   let styledEl = null;
+  let centered = false;
+  let centeredEl = null;
 
   const highlightBox = document.createElement("div");
   highlightBox.id = "linewidth-highlight";
@@ -23,6 +25,9 @@
     <div id="linewidth-row-width">
       <input id="linewidth-width-slider" type="range" min="20" max="100" value="${DEFAULT_WIDTH_EM}" step="1" title="Width (em)" />
       <input id="linewidth-width-input" type="text" value="${DEFAULT_WIDTH_EM}em" size="6" />
+      <label id="linewidth-center-label">
+        <input id="linewidth-center-toggle" type="checkbox" /> Center
+      </label>
       <button id="linewidth-close" type="button" aria-label="Close">&times;</button>
     </div>
   `;
@@ -75,6 +80,8 @@
     chainIndex = 0;
     widthValue = null;
     styledEl = null;
+    centered = false;
+    centeredEl = null;
 
     const slider = panel.querySelector("#linewidth-slider");
     slider.max = String(chain.length - 1);
@@ -84,6 +91,7 @@
     const widthInput = panel.querySelector("#linewidth-width-input");
     widthSlider.value = String(DEFAULT_WIDTH_EM);
     widthInput.value = `${DEFAULT_WIDTH_EM}em`;
+    panel.querySelector("#linewidth-center-toggle").checked = false;
 
     updateSelection();
     document.body.appendChild(panel);
@@ -118,6 +126,17 @@
     updateHighlight(el);
   }
 
+  function applyCenter(el) {
+    el.style.marginLeft = "auto";
+    el.style.marginRight = "auto";
+  }
+
+  function clearCenter(el) {
+    if (!el) return;
+    el.style.removeProperty("margin-left");
+    el.style.removeProperty("margin-right");
+  }
+
   function onSliderInput(e) {
     const oldEl = chain[chainIndex];
     chainIndex = Number(e.target.value);
@@ -129,7 +148,29 @@
       styledEl = newEl;
     }
 
+    if (centered && centeredEl === oldEl) {
+      clearCenter(oldEl);
+      applyCenter(newEl);
+      centeredEl = newEl;
+    }
+
     updateSelection();
+  }
+
+  function onCenterToggle(e) {
+    centered = e.target.checked;
+    const el = chain[chainIndex];
+    if (!el) return;
+
+    if (centered) {
+      applyCenter(el);
+      centeredEl = el;
+    } else {
+      clearCenter(el);
+      centeredEl = null;
+    }
+
+    updateHighlight(el);
   }
 
   function onWidthSliderInput(e) {
@@ -181,12 +222,15 @@
     chainIndex = 0;
     widthValue = null;
     styledEl = null;
+    centered = false;
+    centeredEl = null;
   }
 
   panel.querySelector("#linewidth-close").addEventListener("click", deactivate);
   panel.querySelector("#linewidth-slider").addEventListener("input", onSliderInput);
   panel.querySelector("#linewidth-width-slider").addEventListener("input", onWidthSliderInput);
   panel.querySelector("#linewidth-width-input").addEventListener("input", onWidthInputChange);
+  panel.querySelector("#linewidth-center-toggle").addEventListener("change", onCenterToggle);
 
   browser.runtime.onMessage.addListener((message) => {
     if (message.type === "ping") return Promise.resolve(true);
