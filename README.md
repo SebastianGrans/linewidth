@@ -36,17 +36,29 @@ Once the correct element has been selected, the user can then specify
 the width with another slider (and also a field for manually typing
 the preferred width).
 
-
 ### Phase 3
+
+Packaging. Now we're manually loading this through the debug interface
+of firefix, but other users need a simple way to install it.
+
+
+
+### Phase 4
 
 Fancy features
 
 * Remembering this across sites
+* Try to center the div (a toggle button on the gui)
+
 
 
 ## Development flow
 
 Go to
-[about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox)
+
+```text
+about:debugging#/runtime/this-firefox
+```
+
 and install this asa temporary extension by selecting `manifest.json`
 from this directory.

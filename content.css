@@ -19,9 +19,16 @@
   border-radius: 8px;
   font: 13px/1.4 system-ui, sans-serif;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#linewidth-row-hierarchy,
+#linewidth-row-width {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #linewidth-label {
@@ -32,8 +39,19 @@
   white-space: nowrap;
 }
 
-#linewidth-slider {
+#linewidth-slider,
+#linewidth-width-slider {
   width: 140px;
+}
+
+#linewidth-width-input {
+  width: 60px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  padding: 2px 6px;
+  font: inherit;
 }
 
 #linewidth-close {
@@ -44,4 +62,5 @@
   line-height: 1;
   cursor: pointer;
   padding: 0 4px;
+  margin-left: auto;
 }
