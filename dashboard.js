@@ -62,6 +62,67 @@ function describeSettings(settings) {
   return parts.join(", ");
 }
 
+function renderSiteCard(origin, site) {
+  // Build one site card from the template, filled in with this site's data
+
+  const card = document
+    .getElementById("site-card-template")
+    .content.cloneNode(true).firstElementChild;
+
+  card.querySelector("h2").textContent = origin;
+  card.querySelector(".status").textContent =
+    site.granted && site.registered ? "Auto-applies on load" : "Click-to-restore only";
+
+  const revokeButton = card.querySelector(".revoke");
+  if (site.granted || site.registered) {
+    revokeButton.hidden = false;
+    revokeButton.addEventListener("click", async () => {
+      const pattern = `${origin}/*`;
+      await browser.permissions.remove({ origins: [pattern] });
+      await browser.scripting.unregisterContentScripts({ ids: [pattern] });
+      render();
+    });
+  }
+
+  const list = card.querySelector("ul");
+  for (const page of site.pages) {
+    list.appendChild(renderPageRow(origin, site, page));
+  }
+
+  return card;
+}
+
+function renderPageRow(origin, site, page) {
+  // Build one saved-page row from the template
+
+  const row = document
+    .getElementById("page-row-template")
+    .content.cloneNode(true).firstElementChild;
+
+  const url = `${origin}${page.pathname}`;
+  const link = row.querySelector("a");
+  link.href = url;
+  link.textContent = page.pathname;
+
+  if (site.granted && site.registered) {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      openAndActivate(url);
+    });
+  } else {
+    link.target = "_blank";
+  }
+
+  row.querySelector(".settings").textContent = describeSettings(page.settings);
+
+  row.querySelector(".delete").addEventListener("click", async () => {
+    await browser.storage.local.remove(page.key);
+    render();
+  });
+
+  return row;
+}
+
 async function render() {
   // Rebuild the whole page from current storage/permissions/registrations
 
@@ -75,68 +136,7 @@ async function render() {
   }
 
   for (const [origin, site] of [...sites.entries()].sort()) {
-    const card = document.createElement("section");
-    card.className = "site-card";
-
-    const heading = document.createElement("h2");
-    heading.textContent = origin;
-    card.appendChild(heading);
-
-    const status = document.createElement("p");
-    status.className = "status";
-    status.textContent =
-      site.granted && site.registered ? "Auto-applies on load" : "Click-to-restore only";
-    card.appendChild(status);
-
-    if (site.granted || site.registered) {
-      const revokeButton = document.createElement("button");
-      revokeButton.textContent = "Revoke site access";
-      revokeButton.addEventListener("click", async () => {
-        const pattern = `${origin}/*`;
-        await browser.permissions.remove({ origins: [pattern] });
-        await browser.scripting.unregisterContentScripts({ ids: [pattern] });
-        render();
-      });
-      card.appendChild(revokeButton);
-    }
-
-    const list = document.createElement("ul");
-    for (const page of site.pages) {
-      const item = document.createElement("li");
-
-      const info = document.createElement("span");
-      const url = `${origin}${page.pathname}`;
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.textContent = page.pathname;
-
-      if (site.granted && site.registered) {
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          openAndActivate(url);
-        });
-      } else {
-        link.target = "_blank";
-      }
-
-      info.appendChild(link);
-      info.append(` — ${describeSettings(page.settings)}`);
-      item.appendChild(info);
-
-      const deleteButton = document.createElement("button");
-      deleteButton.textContent = "Delete";
-      deleteButton.addEventListener("click", async () => {
-        await browser.storage.local.remove(page.key);
-        render();
-      });
-      item.appendChild(deleteButton);
-
-      list.appendChild(item);
-    }
-    card.appendChild(list);
-
-    container.appendChild(card);
+    container.appendChild(renderSiteCard(origin, site));
   }
 }
 

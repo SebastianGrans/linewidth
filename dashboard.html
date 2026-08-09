@@ -8,6 +8,23 @@
 <body>
   <h1>Saved pages</h1>
   <div id="sites"></div>
+
+  <template id="site-card-template">
+    <section class="site-card">
+      <h2></h2>
+      <p class="status"></p>
+      <button class="revoke" hidden>Revoke site access</button>
+      <ul></ul>
+    </section>
+  </template>
+
+  <template id="page-row-template">
+    <li>
+      <span><a></a> — <span class="settings"></span></span>
+      <button class="delete">Delete</button>
+    </li>
+  </template>
+
   <script src="dashboard.js"></script>
 </body>
 </html>
