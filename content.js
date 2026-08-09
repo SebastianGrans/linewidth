@@ -105,11 +105,16 @@
 
     widthSlider.value = String(DEFAULT_WIDTH_EM);
     widthInput.value = `${DEFAULT_WIDTH_EM}em`;
-    centerToggle.checked = false;
+    centerToggle.checked = true;
     setControlsDisabled(false);
 
     widthValue = `${DEFAULT_WIDTH_EM}em`;
     applyWidthToCurrent();
+
+    centered = true;
+    applyCenter(chain[chainIndex]);
+    centeredEl = chain[chainIndex];
+
     updateSelection();
     window.addEventListener("scroll", onReposition, true);
     window.addEventListener("resize", onReposition);
