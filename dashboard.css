@@ -20,6 +20,14 @@ h1 {
   margin-bottom: 16px;
 }
 
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .site-card h2 {
   font-size: 15px;
   margin: 0 0 4px;
@@ -28,7 +36,7 @@ h1 {
 
 .status {
   color: #aaa;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .site-card button {

@@ -1,19 +1,25 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>linewidth — saved pages</title>
   <link rel="stylesheet" href="dashboard.css" />
 </head>
+
 <body>
   <h1>Saved pages</h1>
   <div id="sites"></div>
 
   <template id="site-card-template">
     <section class="site-card">
-      <h2></h2>
-      <p class="status"></p>
-      <button class="revoke" hidden>Revoke site access</button>
+      <div class="site-header">
+        <div class="site-name">
+          <h2></h2>
+          <p class="status"></p>
+        </div>
+        <button class="revoke" hidden>Revoke site access</button>
+      </div>
       <ul></ul>
     </section>
   </template>
@@ -27,4 +33,5 @@
 
   <script src="dashboard.js"></script>
 </body>
+
 </html>
