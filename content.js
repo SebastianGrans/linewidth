@@ -93,6 +93,8 @@
     widthInput.value = `${DEFAULT_WIDTH_EM}em`;
     panel.querySelector("#linewidth-center-toggle").checked = false;
 
+    widthValue = `${DEFAULT_WIDTH_EM}em`;
+    applyWidthToCurrent();
     updateSelection();
     document.body.appendChild(panel);
     window.addEventListener("scroll", onReposition, true);
