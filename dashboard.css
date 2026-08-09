@@ -63,3 +63,7 @@ h1 {
 .site-card li span {
   overflow-wrap: anywhere;
 }
+
+.site-card a {
+  color: #8ab4f8;
+}

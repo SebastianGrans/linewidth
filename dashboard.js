@@ -34,6 +34,25 @@ async function loadSites() {
   return sites;
 }
 
+function openAndActivate(url) {
+  // Open the page in a new tab, then trigger the picker panel once it's
+  // done loading. Only meant for sites whose content script auto-runs
+  // (granted permission + registered) - the script has to already be
+  // running on the page by the time the message is sent, and for those
+  // sites the browser guarantees that once the page finishes loading.
+
+  browser.tabs.create({ url, active: true }).then((tab) => {
+    function onUpdated(tabId, changeInfo) {
+      if (tabId !== tab.id || changeInfo.status !== "complete") return;
+
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.tabs.sendMessage(tab.id, { type: "toggle-picker" }).catch(() => {});
+    }
+
+    browser.tabs.onUpdated.addListener(onUpdated);
+  });
+}
+
 function describeSettings(settings) {
   // Build a short human-readable summary of a saved page's settings
 
@@ -85,9 +104,25 @@ async function render() {
     for (const page of site.pages) {
       const item = document.createElement("li");
 
-      const label = document.createElement("span");
-      label.textContent = `${page.pathname} — ${describeSettings(page.settings)}`;
-      item.appendChild(label);
+      const info = document.createElement("span");
+      const url = `${origin}${page.pathname}`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.textContent = page.pathname;
+
+      if (site.granted && site.registered) {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          openAndActivate(url);
+        });
+      } else {
+        link.target = "_blank";
+      }
+
+      info.appendChild(link);
+      info.append(` — ${describeSettings(page.settings)}`);
+      item.appendChild(info);
 
       const deleteButton = document.createElement("button");
       deleteButton.textContent = "Delete";
