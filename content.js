@@ -13,6 +13,8 @@
   let styledElement = null;
   let centered = false;
   let centeredElement = null;
+  let justified = false;
+  let justifiedElement = null;
 
   const highlightBox = document.createElement("div");
   highlightBox.id = "linewidth-highlight";
@@ -29,8 +31,13 @@
     <div id="linewidth-row-width">
       <input id="linewidth-width-slider" type="range" min="20" max="100" value="${DEFAULT_WIDTH_EM}" step="1" title="Width (em)" />
       <input id="linewidth-width-input" type="text" value="${DEFAULT_WIDTH_EM}em" size="6" />
+    </div>
+    <div id="linewidth-row-toggles">
       <label id="linewidth-center-label">
         <input id="linewidth-center-toggle" type="checkbox" /> Center
+      </label>
+      <label id="linewidth-justify-label">
+        <input id="linewidth-justify-toggle" type="checkbox" /> Justify
       </label>
       <button id="linewidth-close" type="button" aria-label="Close">&times;</button>
     </div>
@@ -42,6 +49,7 @@
   const widthSlider = panel.querySelector("#linewidth-width-slider");
   const widthInput = panel.querySelector("#linewidth-width-input");
   const centerToggle = panel.querySelector("#linewidth-center-toggle");
+  const justifyToggle = panel.querySelector("#linewidth-justify-toggle");
   const closeButton = panel.querySelector("#linewidth-close");
   const repickButton = panel.querySelector("#linewidth-repick");
   repickButton.style.backgroundImage = `url("${PICKER_ICON_URL}")`;
@@ -104,6 +112,7 @@
     widthSlider.disabled = disabled;
     widthInput.disabled = disabled;
     centerToggle.disabled = disabled;
+    justifyToggle.disabled = disabled;
     repickButton.disabled = disabled;
   }
 
@@ -113,6 +122,7 @@
 
     clearWidth(styledElement);
     clearCenter(centeredElement);
+    clearJustify(justifiedElement);
 
     chain = buildChain(element);
     chainIndex = 0;
@@ -120,6 +130,8 @@
     styledElement = null;
     centered = false;
     centeredElement = null;
+    justified = false;
+    justifiedElement = null;
 
     slider.max = String(chain.length - 1);
     slider.value = "0";
@@ -127,6 +139,7 @@
     widthSlider.value = String(DEFAULT_WIDTH_EM);
     widthInput.value = `${DEFAULT_WIDTH_EM}em`;
     centerToggle.checked = true;
+    justifyToggle.checked = false;
     setControlsDisabled(false);
 
     widthValue = `${DEFAULT_WIDTH_EM}em`;
@@ -226,6 +239,20 @@
     element.style.removeProperty("margin-right");
   }
 
+  function applyJustify(element) {
+    // Justify the element's text
+
+    element.style.textAlign = "justify";
+  }
+
+  function clearJustify(element) {
+    // Remove text justification from the given element
+
+    if (!element) return;
+
+    element.style.removeProperty("text-align");
+  }
+
   function onSliderInput(event) {
     // Move to a different ancestor, carrying the forced width/centering
     // over from the previously selected element
@@ -246,6 +273,12 @@
       centeredElement = newElement;
     }
 
+    if (justified && justifiedElement === previousElement) {
+      clearJustify(previousElement);
+      applyJustify(newElement);
+      justifiedElement = newElement;
+    }
+
     updateSelection();
   }
 
@@ -262,6 +295,24 @@
     } else {
       clearCenter(element);
       centeredElement = null;
+    }
+
+    updateHighlight(element);
+  }
+
+  function onJustifyToggle(event) {
+    // Toggle text justification on/off for the current chain element
+
+    justified = event.target.checked;
+    const element = chain[chainIndex];
+    if (!element) return;
+
+    if (justified) {
+      applyJustify(element);
+      justifiedElement = element;
+    } else {
+      clearJustify(element);
+      justifiedElement = null;
     }
 
     updateHighlight(element);
@@ -341,6 +392,7 @@
   widthSlider.addEventListener("input", onWidthSliderInput);
   widthInput.addEventListener("input", onWidthInputChange);
   centerToggle.addEventListener("change", onCenterToggle);
+  justifyToggle.addEventListener("change", onJustifyToggle);
 
   browser.runtime.onMessage.addListener((message) => {
     if (message.type === "ping") return Promise.resolve(true);

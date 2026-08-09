@@ -13,7 +13,7 @@
   bottom: 16px;
   right: 16px;
   z-index: 2147483647;
-  width: 380px;
+  width: 320px;
   background: #1e1e1e;
   color: #fff;
   padding: 10px 12px;
@@ -58,7 +58,8 @@
 }
 
 #linewidth-row-hierarchy,
-#linewidth-row-width {
+#linewidth-row-width,
+#linewidth-row-toggles {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -87,7 +88,8 @@
   font: inherit;
 }
 
-#linewidth-center-label {
+#linewidth-center-label,
+#linewidth-justify-label {
   display: inline-flex;
   align-items: center;
   gap: 4px;
