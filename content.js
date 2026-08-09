@@ -33,6 +33,14 @@
     </div>
   `;
 
+  const hint = panel.querySelector("#linewidth-hint");
+  const slider = panel.querySelector("#linewidth-slider");
+  const label = panel.querySelector("#linewidth-label");
+  const widthSlider = panel.querySelector("#linewidth-width-slider");
+  const widthInput = panel.querySelector("#linewidth-width-input");
+  const centerToggle = panel.querySelector("#linewidth-center-toggle");
+  const closeButton = panel.querySelector("#linewidth-close");
+
   function describe(el) {
     if (!el) return "";
     let s = el.tagName.toLowerCase();
@@ -72,11 +80,11 @@
   }
 
   function setControlsDisabled(disabled) {
-    panel.querySelector("#linewidth-hint").style.display = disabled ? "block" : "none";
-    panel.querySelector("#linewidth-slider").disabled = disabled;
-    panel.querySelector("#linewidth-width-slider").disabled = disabled;
-    panel.querySelector("#linewidth-width-input").disabled = disabled;
-    panel.querySelector("#linewidth-center-toggle").disabled = disabled;
+    hint.style.display = disabled ? "block" : "none";
+    slider.disabled = disabled;
+    widthSlider.disabled = disabled;
+    widthInput.disabled = disabled;
+    centerToggle.disabled = disabled;
   }
 
   function onClick(e) {
@@ -92,15 +100,12 @@
     centered = false;
     centeredEl = null;
 
-    const slider = panel.querySelector("#linewidth-slider");
     slider.max = String(chain.length - 1);
     slider.value = "0";
 
-    const widthSlider = panel.querySelector("#linewidth-width-slider");
-    const widthInput = panel.querySelector("#linewidth-width-input");
     widthSlider.value = String(DEFAULT_WIDTH_EM);
     widthInput.value = `${DEFAULT_WIDTH_EM}em`;
-    panel.querySelector("#linewidth-center-toggle").checked = false;
+    centerToggle.checked = false;
     setControlsDisabled(false);
 
     widthValue = `${DEFAULT_WIDTH_EM}em`;
@@ -113,7 +118,7 @@
   function updateSelection() {
     const el = chain[chainIndex];
     updateHighlight(el);
-    panel.querySelector("#linewidth-label").textContent = describe(el);
+    label.textContent = describe(el);
   }
 
   function onReposition() {
@@ -186,7 +191,7 @@
 
   function onWidthSliderInput(e) {
     widthValue = `${e.target.value}em`;
-    panel.querySelector("#linewidth-width-input").value = widthValue;
+    widthInput.value = widthValue;
     applyWidthToCurrent();
   }
 
@@ -196,7 +201,6 @@
 
     const match = raw.match(/^(\d+(?:\.\d+)?)em$/);
     if (match) {
-      const widthSlider = panel.querySelector("#linewidth-width-slider");
       const clamped = Math.min(
         Number(widthSlider.max),
         Math.max(Number(widthSlider.min), Number(match[1]))
@@ -239,11 +243,11 @@
     centeredEl = null;
   }
 
-  panel.querySelector("#linewidth-close").addEventListener("click", deactivate);
-  panel.querySelector("#linewidth-slider").addEventListener("input", onSliderInput);
-  panel.querySelector("#linewidth-width-slider").addEventListener("input", onWidthSliderInput);
-  panel.querySelector("#linewidth-width-input").addEventListener("input", onWidthInputChange);
-  panel.querySelector("#linewidth-center-toggle").addEventListener("change", onCenterToggle);
+  closeButton.addEventListener("click", deactivate);
+  slider.addEventListener("input", onSliderInput);
+  widthSlider.addEventListener("input", onWidthSliderInput);
+  widthInput.addEventListener("input", onWidthInputChange);
+  centerToggle.addEventListener("change", onCenterToggle);
 
   browser.runtime.onMessage.addListener((message) => {
     if (message.type === "ping") return Promise.resolve(true);
