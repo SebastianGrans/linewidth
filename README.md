@@ -21,9 +21,23 @@ more readable.
 
 ## Development flow
 
+Install Node.js
+
+```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+source ~/.zshrc
+nvm install --lts
+```
+
 Install `web-ext`
 
 https://github.com/mozilla/web-ext
+
+```sh
+npm install          # installs web-ext from package.json
+npx web-ext lint     # check the manifest
+```
+
 
 And then run the extension in a sandbox browser:
 
