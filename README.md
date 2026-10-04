@@ -7,6 +7,12 @@ With this extension, you can click on a html element, and then with a
 slider choose the correct parent element, and finally, adjust its
 width.
 
+## Installation
+
+The latest version of the extension can be downloaded from the release
+page: [here](https://github.com/SebastianGrans/linewidth/releases)
+
+
 ## Example page 
 
 A good example page that has this poor design is this:
@@ -52,3 +58,14 @@ going to this page:
 ```text
 about:debugging#/runtime/this-firefox
 ```
+
+## Signing a new release
+
+A new release would require a new version number.
+
+```sh
+npx web-ext lint
+npx web-ext sign --channel=unlisted \
+  --api-key=$AMO_JWT_ISSUER --api-secret=$AMO_JWT_SECRET
+```
+
