@@ -18,7 +18,8 @@
   "optional_host_permissions": ["<all_urls>"],
   "action": {
     "default_title": "Pick an element",
-    "default_icon": "src/icons/icon.svg"
+    "default_icon": "src/icons/icon.svg",
+    "default_area": "navbar"
   },
   "background": {
     "scripts": ["src/background/background.js"]

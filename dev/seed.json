@@ -1,0 +1,9 @@
+{
+  "https://mosquitto.org/documentation/*": {
+    "selector": "article",
+    "width": "45em",
+    "centered": true,
+    "justified": false,
+    "enabled": true
+  }
+}

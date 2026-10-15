@@ -69,7 +69,24 @@ browser.runtime.onMessage.addListener((message, sender) => {
   }
 });
 
-browser.runtime.onInstalled.addListener(() => {
+async function seedDevSettings() {
+  // Start a temporary install, e.g. `npx web-ext run` with its fresh
+  // profile, with the sample settings in dev/seed.json rather than an empty
+  // dashboard. Existing settings are never touched, and built packages
+  // leave out the dev folder entirely
+
+  const existing = await browser.storage.local.get(null);
+  if (Object.keys(existing).length) return;
+
+  try {
+    const response = await fetch(browser.runtime.getURL("dev/seed.json"));
+    await browser.storage.local.set(await response.json());
+  } catch {
+    // No seed file to load
+  }
+}
+
+browser.runtime.onInstalled.addListener(({ reason, temporary }) => {
   // Create this once at install/update rather than on every background
   // script run, to avoid "duplicate id" errors on re-registration
   browser.contextMenus.create({
@@ -77,6 +94,8 @@ browser.runtime.onInstalled.addListener(() => {
     title: "Open Dashboard",
     contexts: ["action"],
   });
+
+  if (reason === "install" && temporary) seedDevSettings();
 });
 
 browser.contextMenus.onClicked.addListener((info) => {

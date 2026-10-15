@@ -28,6 +28,18 @@ And then run the extension in a sandbox browser:
 npx web-ext run
 ```
 
+This starts with a fresh Firefox profile every time, so to have
+something to test with, the extension loads the sample settings from
+[dev/seed.json](dev/seed.json) when it's installed temporarily. Firefox
+opens on a page they apply to (set in
+[web-ext-config.mjs](web-ext-config.mjs)). Click the toolbar icon once
+and allow access to the site; after that, the settings apply
+automatically on every page load. Add entries to `dev/seed.json` to
+have more settings ready.
+
+The `dev/` folder and the config file are left out of built and signed
+packages.
+
 You can also install the bare extension in your regular browser by
 going to this page:
 
