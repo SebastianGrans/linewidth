@@ -4,13 +4,13 @@
 # manifest.json) to find new versions.
 #
 # Usage: bump "version" in manifest.json, commit, then run
-#   AMO_JWT_ISSUER=... AMO_JWT_SECRET=... scripts/release.sh
+#   AMO_ISSUER=... AMO_SECRET=... scripts/release.sh
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-: "${AMO_JWT_ISSUER:?must be set to your addons.mozilla.org API key}"
-: "${AMO_JWT_SECRET:?must be set to your addons.mozilla.org API secret}"
+: "${AMO_ISSUER:?must be set to your addons.mozilla.org API key}"
+: "${AMO_SECRET:?must be set to your addons.mozilla.org API secret}"
 
 version=$(node -p 'require("./manifest.json").version')
 addon_id=$(node -p 'require("./manifest.json").browser_specific_settings.gecko.id')
@@ -32,7 +32,7 @@ npx web-ext lint
 # Mozilla signs each version only once, so reuse the signed file if an
 # earlier run of this script got that far
 if [[ ! -f $xpi ]]; then
-  npx web-ext sign --api-key="$AMO_JWT_ISSUER" --api-secret="$AMO_JWT_SECRET"
+  npx web-ext sign --api-key="$AMO_ISSUER" --api-secret="$AMO_SECRET"
 fi
 if [[ ! -f $xpi ]]; then
   echo "Signing didn't produce $xpi. Check web-ext-artifacts/" >&2

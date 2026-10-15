@@ -53,7 +53,7 @@ about:debugging#/runtime/this-firefox
 Bump `"version"` in `manifest.json`, commit, then run:
 
 ```sh
-AMO_JWT_ISSUER=... AMO_JWT_SECRET=... scripts/release.sh
+AMO_ISSUER=... AMO_SECRET=... scripts/release.sh
 ```
 
 This lints the extension, has Mozilla sign it (unlisted, so it isn't
