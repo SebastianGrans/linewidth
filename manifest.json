@@ -1,29 +1,42 @@
 {
   "manifest_version": 3,
   "name": "linewidth",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pick an HTML element on the page and step through its ancestor hierarchy.",
   "browser_specific_settings": {
     "gecko": {
       "id": "linewidth@sebastiangrans.github.io",
       "strict_min_version": "140.0",
       "update_url": "https://github.com/SebastianGrans/linewidth/releases/latest/download/updates.json",
-      "data_collection_permissions": { "required": ["none"] }
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   },
   "icons": {
     "48": "src/icons/icon.svg",
     "96": "src/icons/icon.svg"
   },
-  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
-  "optional_host_permissions": ["<all_urls>"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "contextMenus"
+  ],
+  "optional_host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_title": "Pick an element",
     "default_icon": "src/icons/icon.svg",
     "default_area": "navbar"
   },
   "background": {
-    "scripts": ["src/background/background.js"]
+    "scripts": [
+      "src/background/background.js"
+    ]
   },
   "options_ui": {
     "page": "src/dashboard/dashboard.html",
@@ -31,8 +44,13 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/icons/picker.svg", "src/icons/delete.svg"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "src/icons/picker.svg",
+        "src/icons/delete.svg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
