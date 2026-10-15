@@ -15,6 +15,9 @@ width.
 The latest version of the extension can be downloaded from the release
 page: [here](https://github.com/SebastianGrans/linewidth/releases)
 
+Every version after 0.1.0 updates itself automatically. If you have
+0.1.0 installed, install the latest release by hand once.
+
 
 ## Applying settings to more than one page
 

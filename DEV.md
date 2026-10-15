@@ -48,21 +48,30 @@ going to this page:
 about:debugging#/runtime/this-firefox
 ```
 
-## Signing a new release
+## Publishing a new release
 
-Bump `"version"` in `manifest.json`
-
-```sh
-npx web-ext lint
-npx web-ext sign --channel=unlisted \
-  --api-key=$AMO_JWT_ISSUER --api-secret=$AMO_JWT_SECRET
-```
-
-Produces an `.xpi` file in `web-ext-artifacts/`
-
-## Publish a new release
+Bump `"version"` in `manifest.json`, commit, then run:
 
 ```sh
-gh release create v0.X.0 linewidth-0.X.0.xpi --title "v0.X.0" --notes "Release version X"
+AMO_JWT_ISSUER=... AMO_JWT_SECRET=... scripts/release.sh
 ```
+
+This lints the extension, has Mozilla sign it (unlisted, so it isn't
+published on addons.mozilla.org), tags the commit and creates a GitHub
+release with two files:
+
+- `linewidth-<version>.xpi`, the signed extension
+- `updates.json`, which says that this is the newest version and where
+  to download it
+
+Installed copies check
+`https://github.com/SebastianGrans/linewidth/releases/latest/download/updates.json`
+(the `update_url` in `manifest.json`) about once a day, and update
+themselves when it lists a newer version. GitHub points that link at
+the newest release that isn't a draft or pre-release. To check right
+away, open `about:addons`, click the gear icon and choose
+**Check for Updates**.
+
+If the script fails partway, fix the problem and run it again: it
+reuses an already signed `.xpi` and an existing tag.
 
