@@ -57,8 +57,16 @@ browser.action.onClicked.addListener(async (tab) => {
   await browser.tabs.sendMessage(tab.id, { type: "toggle-picker" });
 });
 
-browser.runtime.onMessage.addListener((message) => {
+browser.runtime.onMessage.addListener((message, sender) => {
   if (message.type === "open-dashboard") browser.runtime.openOptionsPage();
+
+  if (message.type === "set-badge" && sender.tab) {
+    // Tab-specific badges are cleared by the browser whenever the tab
+    // navigates to a new page, so the next page starts without one
+    const tabId = sender.tab.id;
+    browser.action.setBadgeText({ tabId, text: message.applied ? "✓" : "" });
+    browser.action.setBadgeBackgroundColor({ tabId, color: "#34c643" });
+  }
 });
 
 browser.runtime.onInstalled.addListener(() => {

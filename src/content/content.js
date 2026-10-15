@@ -241,11 +241,18 @@
     deleteButton.style.display = stored[activeKey] ? "" : "none";
   }
 
+  function setBadge(applied) {
+    // Mark the toolbar icon while saved settings are applied to this page
+
+    browser.runtime.sendMessage({ type: "set-badge", applied });
+  }
+
   function onDeleteClick() {
     // Remove the active key's saved settings and clear the currently applied styling
 
     browser.storage.local.remove(activeKey);
     deleteButton.style.display = "none";
+    setBadge(false);
 
     clearWidth(styledElement);
     clearCenter(centeredElement);
@@ -307,6 +314,7 @@
 
     activeKey = rule.key;
     applyStateToElement(element, settings);
+    setBadge(true);
   }
 
   function onMouseMove(event) {
@@ -379,6 +387,7 @@
     window.addEventListener("scroll", onReposition, true);
     window.addEventListener("resize", onReposition);
     saveSettings();
+    setBadge(true);
   }
 
   function startPicking() {
@@ -646,6 +655,12 @@
       if (active) deactivate();
       else activate();
     }
+  });
+
+  // Navigating away resets the tab's badge, so a page restored from the
+  // back/forward cache (still styled, script not re-run) has to set it again
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) setBadge(chain.length > 0);
   });
 
   const initialRestorePromise = silentlyRestoreOnLoad();
