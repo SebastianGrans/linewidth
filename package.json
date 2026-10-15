@@ -1,4 +1,5 @@
 {
+  "name": "linewidth",
   "devDependencies": {
     "web-ext": "^10.6.0"
   }
