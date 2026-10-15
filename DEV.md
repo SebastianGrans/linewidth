@@ -50,11 +50,17 @@ about:debugging#/runtime/this-firefox
 
 ## Publishing a new release
 
-Bump `"version"` in `manifest.json`, commit, then run:
+Bump `"version"` in `manifest.json`, commit, then run this (it needs
+[uv](https://docs.astral.sh/uv/) and the GitHub CLI, `gh`):
 
 ```sh
-AMO_ISSUER=... AMO_SECRET=... scripts/release.sh
+uv run scripts/release.py
 ```
+
+Signing needs your [addons.mozilla.org API
+credentials](https://addons.mozilla.org/developers/addon/api/key/). The
+script reads them from `AMO_ISSUER` and `AMO_SECRET` if set, and asks
+for them otherwise.
 
 This lints the extension, has Mozilla sign it (unlisted, so it isn't
 published on addons.mozilla.org), tags the commit and creates a GitHub
