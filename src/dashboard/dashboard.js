@@ -80,6 +80,32 @@ function describeSettings(settings) {
   return parts.join(", ");
 }
 
+async function renamePage(origin, page, pathname) {
+  // Move a saved page's settings to a new path or path pattern, returning
+  // an error message if the new path can't be used
+
+  if (!pathname.startsWith("/")) return "Must start with /";
+
+  // Normalize the same way the browser does for location.pathname (e.g.
+  // percent-encoding), so the new key can actually match pages
+  let url;
+  try {
+    url = new URL(`${origin}${pathname}`);
+  } catch {
+    return "Not a valid path";
+  }
+
+  const newKey = `${url.origin}${url.pathname}`;
+  if (newKey === page.key) return null;
+
+  const stored = await browser.storage.local.get(newKey);
+  if (stored[newKey]) return "This path already has saved settings";
+
+  await browser.storage.local.set({ [newKey]: page.settings });
+  await browser.storage.local.remove(page.key);
+  return null;
+}
+
 function renderSiteCard(origin, site) {
   // Build one site card from the template, filled in with this site's data
 
@@ -140,7 +166,8 @@ function renderPageRow(origin, site, page) {
     .getElementById("page-row-template")
     .content.cloneNode(true).firstElementChild;
 
-  const url = `${origin}${page.pathname}`;
+  // A pattern isn't a real URL, so link to the part before its first "*"
+  const url = `${origin}${page.pathname.split("*")[0]}`;
   const link = row.querySelector("a");
   link.href = url;
   link.textContent = page.pathname;
@@ -168,6 +195,34 @@ function renderPageRow(origin, site, page) {
       render();
     });
   }
+
+  row.querySelector(".edit").addEventListener("click", () => {
+    // Swap the link for a text field to change the page's path, e.g. into a
+    // pattern like /docs/* so the settings apply to every page under /docs/.
+    // Enter saves, Escape cancels
+
+    const input = document.createElement("input");
+    input.className = "path-input";
+    input.value = page.pathname;
+    input.title = "Use * to match anything, e.g. /docs/*";
+
+    input.addEventListener("input", () => input.setCustomValidity(""));
+    input.addEventListener("keydown", async (event) => {
+      if (event.key === "Escape") render();
+      if (event.key !== "Enter") return;
+
+      const error = await renamePage(origin, page, input.value.trim());
+      if (error) {
+        input.setCustomValidity(error);
+        input.reportValidity();
+        return;
+      }
+      render();
+    });
+
+    link.replaceWith(input);
+    input.focus();
+  });
 
   row.querySelector(".delete").addEventListener("click", async () => {
     await browser.storage.local.remove(page.key);

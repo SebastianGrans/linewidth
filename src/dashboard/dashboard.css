@@ -76,6 +76,15 @@ h1 {
   color: #8ab4f8;
 }
 
+.path-input {
+  background: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  padding: 2px 6px;
+  font: inherit;
+}
+
 .row-actions,
 .site-actions {
   display: flex;

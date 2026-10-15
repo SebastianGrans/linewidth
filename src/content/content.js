@@ -6,7 +6,11 @@
   const DEFAULT_WIDTH_EM = 45;
   const PICKER_ICON_URL = browser.runtime.getURL("src/icons/picker.svg");
   const DELETE_ICON_URL = browser.runtime.getURL("src/icons/delete.svg");
-  const STORAGE_KEY = `${location.origin}${location.pathname}`;
+  const PAGE_URL = `${location.origin}${location.pathname}`;
+
+  // The saved key settings are read from and saved to: either PAGE_URL
+  // itself, or a pattern such as "https://example.com/docs/*"
+  let activeKey = PAGE_URL;
 
   let active = false;
   let chain = [];
@@ -26,6 +30,10 @@
   panel.id = "linewidth-panel";
   panel.innerHTML = `
     <div id="linewidth-hint">Click on an element</div>
+    <div id="linewidth-row-scope">
+      <label for="linewidth-scope">Apply to</label>
+      <select id="linewidth-scope" title="Which pages these settings apply to"></select>
+    </div>
     <div id="linewidth-row-hierarchy">
     <input id="linewidth-slider" type="range" min="0" max="0" value="0" step="1" title="Select ancestor" />
     <div id="linewidth-label"></div>
@@ -49,6 +57,7 @@
   `;
 
   const hint = panel.querySelector("#linewidth-hint");
+  const scopeSelect = panel.querySelector("#linewidth-scope");
   const slider = panel.querySelector("#linewidth-slider");
   const label = panel.querySelector("#linewidth-label");
   const widthSlider = panel.querySelector("#linewidth-width-slider");
@@ -133,14 +142,87 @@
     return parts.join(" > ");
   }
 
+  function patternToRegex(pattern) {
+    // Turn a saved key into a regex where "*" matches anything, and a
+    // trailing "/*" also matches the bare directory ("/docs/*" matches "/docs")
+
+    const source = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\*/g, ".*")
+      .replace(/\/\.\*$/, "(?:/.*)?");
+    return new RegExp(`^${source}$`);
+  }
+
+  async function findRule() {
+    // Find the saved settings that apply to this page: an exact match if
+    // there is one, otherwise the longest (most specific) matching pattern
+
+    const stored = await browser.storage.local.get(null);
+    const keys = Object.keys(stored).filter((key) => patternToRegex(key).test(PAGE_URL));
+    if (!keys.length) return null;
+
+    const key = keys.includes(PAGE_URL)
+      ? PAGE_URL
+      : keys.sort((a, b) => b.length - a.length)[0];
+    return { key, settings: stored[key] };
+  }
+
+  function scopeKeys() {
+    // List the keys this page's settings can be saved under, from this page
+    // alone up to the whole site. A path not ending in "/" names a page
+    // rather than a directory, so it gets no wildcard of its own
+
+    const segments = location.pathname.split("/").filter(Boolean);
+    const depth = location.pathname.endsWith("/") ? segments.length : segments.length - 1;
+
+    const keys = [PAGE_URL];
+    for (let i = depth; i >= 0; i--) {
+      const directory = segments.slice(0, i).map((segment) => `/${segment}`).join("");
+      keys.push(`${location.origin}${directory}/*`);
+    }
+    return keys;
+  }
+
+  function renderScopeOptions() {
+    // Fill the scope dropdown, including the active key in case it's a
+    // custom pattern (e.g. one edited in the dashboard)
+
+    const keys = scopeKeys();
+    if (!keys.includes(activeKey)) keys.push(activeKey);
+
+    scopeSelect.replaceChildren(
+      ...keys.map((key) =>
+        new Option(key === PAGE_URL ? "This page only" : key.slice(location.origin.length), key)
+      )
+    );
+    scopeSelect.value = activeKey;
+  }
+
+  function onScopeChange() {
+    // Save the current settings under the newly chosen key. The old rule is
+    // only removed if the new one covers every page it did: narrowing the
+    // scope leaves the broader rule alone and adds an override on top
+
+    const previousKey = activeKey;
+    activeKey = scopeSelect.value;
+
+    if (chain.length) {
+      if (patternToRegex(activeKey).test(previousKey)) browser.storage.local.remove(previousKey);
+      saveSettings();
+    }
+
+    renderScopeOptions();
+    refreshDeleteButtonVisibility();
+  }
+
   function saveSettings() {
-    // Persist the current selection and settings for this page
+    // Persist the current selection and settings under the active key
 
     const element = chain[chainIndex];
     if (!element) return;
 
     browser.storage.local.set({
-      [STORAGE_KEY]: {
+      [activeKey]: {
         selector: buildSelector(element),
         width: widthValue,
         centered,
@@ -153,16 +235,16 @@
   }
 
   async function refreshDeleteButtonVisibility() {
-    // Show the delete button only if this page currently has saved settings
+    // Show the delete button only if the active key currently has saved settings
 
-    const stored = await browser.storage.local.get(STORAGE_KEY);
-    deleteButton.style.display = stored[STORAGE_KEY] ? "" : "none";
+    const stored = await browser.storage.local.get(activeKey);
+    deleteButton.style.display = stored[activeKey] ? "" : "none";
   }
 
   function onDeleteClick() {
-    // Remove saved settings for this page and clear the currently applied styling
+    // Remove the active key's saved settings and clear the currently applied styling
 
-    browser.storage.local.remove(STORAGE_KEY);
+    browser.storage.local.remove(activeKey);
     deleteButton.style.display = "none";
 
     clearWidth(styledElement);
@@ -189,8 +271,8 @@
 
     if (chain.length) return true;
 
-    const stored = await browser.storage.local.get(STORAGE_KEY);
-    const settings = stored[STORAGE_KEY];
+    const rule = await findRule();
+    const settings = rule?.settings;
     if (!settings) return false;
 
     let element = null;
@@ -201,6 +283,7 @@
     }
     if (!element || chain.length) return false;
 
+    activeKey = rule.key;
     selectElement(element, settings);
     return true;
   }
@@ -210,8 +293,8 @@
 
     if (chain.length) return;
 
-    const stored = await browser.storage.local.get(STORAGE_KEY);
-    const settings = stored[STORAGE_KEY];
+    const rule = await findRule();
+    const settings = rule?.settings;
     if (!settings || settings.enabled === false) return;
 
     let element = null;
@@ -222,6 +305,7 @@
     }
     if (!element || chain.length) return;
 
+    activeKey = rule.key;
     applyStateToElement(element, settings);
   }
 
@@ -506,7 +590,6 @@
     document.body.appendChild(highlightBox);
     document.body.appendChild(panel);
     document.addEventListener("keydown", onKeyDown, true);
-    refreshDeleteButtonVisibility();
 
     // Wait for the page-load silent restore to settle first, so it can't
     // race with the restoreSettings() call below over the same chain state
@@ -518,11 +601,14 @@
       updateSelection();
       window.addEventListener("scroll", onReposition, true);
       window.addEventListener("resize", onReposition);
-      return;
+    } else {
+      const restored = await restoreSettings();
+      if (!restored) startPicking();
     }
 
-    const restored = await restoreSettings();
-    if (!restored) startPicking();
+    // Only now is the active key settled, as restoring may have changed it
+    renderScopeOptions();
+    refreshDeleteButtonVisibility();
   }
 
   function deactivate() {
@@ -544,6 +630,7 @@
   });
   repickButton.addEventListener("click", onRepickClick);
   deleteButton.addEventListener("click", onDeleteClick);
+  scopeSelect.addEventListener("change", onScopeChange);
   slider.addEventListener("input", onSliderInput);
   slider.addEventListener("change", saveSettings);
   widthSlider.addEventListener("input", onWidthSliderInput);
