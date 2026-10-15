@@ -40,7 +40,7 @@
       <button id="linewidth-repick" type="button" title="Re-select element" aria-label="Re-select element"></button>
     </div>
     <div id="linewidth-row-width">
-      <input id="linewidth-width-slider" type="range" min="20" max="100" value="${DEFAULT_WIDTH_EM}" step="1" title="Width (em)" />
+      <input id="linewidth-width-slider" type="range" min="20" max="100" value="${DEFAULT_WIDTH_EM}" step="1" title="Max width (em)" />
       <input id="linewidth-width-input" type="text" value="${DEFAULT_WIDTH_EM}em" size="6" />
     </div>
     <div id="linewidth-row-toggles">
@@ -437,9 +437,9 @@
   }
 
   function clearWidth(element) {
-    // Remove any forced width from the given element
+    // Remove any max width from the given element
 
-    if (element) element.style.removeProperty("width");
+    if (element) element.style.removeProperty("max-width");
   }
 
   function applyWidthToCurrent() {
@@ -451,7 +451,7 @@
 
     if (styledElement && styledElement !== element) clearWidth(styledElement);
     if (widthValue) {
-      element.style.width = widthValue;
+      element.style.maxWidth = widthValue;
       styledElement = element;
     } else {
       styledElement = null;
@@ -490,7 +490,7 @@
   }
 
   function onSliderInput(event) {
-    // Move to a different ancestor, carrying the forced width/centering
+    // Move to a different ancestor, carrying the max width/centering
     // over from the previously selected element
 
     const previousElement = chain[chainIndex];
@@ -499,7 +499,7 @@
 
     if (widthValue && styledElement === previousElement) {
       clearWidth(previousElement);
-      newElement.style.width = widthValue;
+      newElement.style.maxWidth = widthValue;
       styledElement = newElement;
     }
 
